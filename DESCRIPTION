@@ -1,0 +1,15 @@
+Package: StatComp18048
+Type: Package
+Title: three functions for 'Statistical Computing' course
+Version: 1.0
+Date: 2019-01-10
+Author: Wei Gai
+Maintainer: Wei Gai <gw2012@mail.ustc.edu.cn>
+Description: Several R and Rcpp function are included in this package for illustration. 
+License: GPL (>= 2)
+Imports: knitr, rmarkdown
+RoxygenNote: 6.1.1
+URL: http://github.com/gwgw2018/StatComp18048
+BugReports: http://github.com/gwgw2018/StatComp18048/issues
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr

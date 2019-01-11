@@ -1,0 +1,807 @@
+---
+title: "18048homework"
+author: '18048'
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to StatComp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+## Example No.1 from Page32
+```{r}
+x<-1:4
+y<-rep(1,4)
+z<-x+y
+z
+x<-1:4
+y<-1:2
+z<-x+y
+z
+x <- 1:4
+a<-10
+z<-a*x
+z
+```
+## Example No.2 from Page34
+```{r}
+m1<-matrix(1,nr=2,nc=2)
+m2<-matrix(2,nr=2,nc=2)
+rbind(m1,m2)
+cbind(m1,m2)
+rbind(m1,m2)%*%cbind(m1,m2)
+cbind(m1,m2)%*%rbind(m1,m2)
+```
+## Example No.3 from Page40
+```{r}
+m <- matrix(1:4,2,2)
+layout(m,widths=c(1,3),heights=c(3,1))
+layout.show(4)
+m<-matrix(c(1,1,2,1),2,2)
+layout(m,widths=c(2,1),heights=c(1,2))
+layout.show(2)
+```
+## Exercises 3.5
+
+Generate a sample of size 1000 from the distribution of x by the inverse transform method
+
+```{r}
+#Inverse transform method#
+x<-c(0,1,2,3,4);p<-c(0.1,0.2,0.2,0.2,0.3)
+cp<-cumsum(p);m<-1e3;r<-numeric(m)
+r<-x[findInterval(runif(m),cp)+1]
+ct1<-as.vector(table(r));
+table(r);#frequency table of sample#
+ct1/sum(ct1)/p#relative frequency table#
+
+#R sample function#
+y<-sample(0:4,size=1000,replace=TRUE,prob=c(0.1,0.2,0.2,0.2,0.3))
+ct2<-as.vector(table(y));
+table(y);#frequency table of sample#
+ct2/sum(ct2)/p#relative frequency table#
+```
+
+## Exercises 3.7
+
+1.Write the function??  
+        to generate arandom sample of size nfrom the Beta(a,b) distribution by the acceptance-rejection method    
+2.Generation:  
+        a random sample of size 1000 from Beta(3,2) distribution  
+3.Graph  
+        graph the histogram of the sample with the theoretical Beta(3,2) denisy superimposed  
+
+```{r}
+#1.Write the function#
+g<-function(n,a,b){
+    j<-k<-0;y<-numeric(n)
+    while(k<n){
+      u<-runif(1)
+      j<-j+1
+      x<-runif(1)
+      if(x^(a-1)*(1-x)^(b-1)>u){
+        k<-k+1
+        y[k]<-x
+      }
+    }
+    return(y)
+}
+#2.Generation#
+x<-g(1000,3,2)#a random sample of size 1000 from Beta(3,2) distribution#
+head(x,n=50L)#print the head 50 for example#
+#3.Graph#
+hist(x,prob=TRUE,xlab="x",breaks=20,ylab="Density",col="red",main=expression(f(x)==12*x^2*(1-x)))#the histogram of the sample #
+z<-seq(0,1,0.01)
+lines(z,12*z^2*(1-z),col="blue")#the theoretical Beta(3,2) denisy superimposed#
+```
+
+## Exercises 3.12
+
+Simulate a continous Exponential-Gamma mixture.
+
+```{r}
+mix<-function(n,r,beta){
+  lambda<-rgamma(n,r,beta)#generate paramete lambda#
+  x<-rexp(n,lambda)#generate the mixture#
+  return(x)
+}
+x<-mix(1000,4,2)
+head(x,n=50L)#print the head 50 for example#
+hist(x,prob=TRUE,breaks=60,col="red",main="Exponential-Gamma Mixture")#graph#
+```
+
+## Exercises 5.4
+the pdf of B(3,3) is x^2*(1-x)^2/B(3,3)
+
+```{r}
+f<-function(x){
+ m<-1e4;t<-runif(m,min=0,max=x)#t follows uniform distribution#
+ cd<-mean(30*x*(t^2)*((1-t)^2))#use the pdf of B(3,3) to get the conditional expectation as the estimation#
+ return(cd)
+}
+est<-matrix(0,2,9) #compare the generation function and pbeta function#
+for(i in 1:9){
+  est[1,i]<-pbeta(i/10,3,3) 
+  est[2,i]<-f(i/10)
+}
+print(est)
+```
+
+
+## Exercises 5.9
+sorry to only can write the generation function using the antithetic variables 
+
+```{r}
+function(m,sigma){
+    x<-numeric(m)
+    u<-runif(m/2)#use inverse transformation method to generate
+    v<-1-u #antithetic variables#
+    u<-c(u,v)
+    x<-sqrt(-2*(sigma^2)*log(1-u))#intagrate the Rayleigh density function to get the cdf#
+    return(x) 
+}
+```
+
+
+## Exercises 5.13
+importance function 1--normal distribution pdf
+importance function 2--Rayleigh distribution pdf from exercise 5.9
+
+```{r}
+m<-10000
+theta.hat<-se<-numeric(2)
+g<-function(x){x^2/sqrt(2*pi)*exp(-x^2/2)*(x>1)} #g(x)#
+
+x<-rnorm(m) #importance function 1--normal distribution pdf#
+fg<-g(x)/((1/sqrt(2*pi))*exp(-x^2/2))
+theta.hat[1]<-mean(fg)
+se[1]<-sd(fg)
+
+fg2<-function(m,sigma){
+    x<-numeric(m)
+    u<-runif(m)
+    x<-sqrt(-2*(sigma^2)*log(1-u))
+    return(x) 
+}  #importance function 2--Rayleigh distribution pdf from exercise 5.9 #
+x<-fg2(m,1)
+fg22<-g(x)/(x*exp(-x^2/2))
+theta.hat<-mean(fg22)
+se[2]<-sd(fg22)
+se
+```
+## Exercises 5.14
+Obtain estimate by importance sampling
+```{r}
+m<-10000
+g<-function(x){(x^2)/sqrt(2*pi)*exp(-x^2/2)*(x>1)}
+x<-rnorm(m)
+fg<-g(x)/((1/sqrt(2*pi))*exp(-(x^2)/2)) # #importance function --normal distribution pdf#
+theta.hat<-mean(fg)
+se<-sd(fg)
+theta.hat #estimation#
+```
+#1
+```{r}
+m<-10000
+n<-100
+gini<-numeric(m)
+for(i in 1:m){
+  x<-rlnorm(n,meanlog=0,sdlog=1)#standard lognormal distribution#
+  xbar<-mean(x)
+  xs<-sort(x)
+  t<-0
+  for(j in 1:n){
+    t<-t+(2*j-n-1)*xs[j]/(n*n*xbar)
+  }
+  gini[i]<-t
+}
+gini.mean<-mean(gini)
+print(gini.mean)#mean#
+gini.median<-median(gini)
+print(gini.median)#median#
+gini.deciles<-quantile(gini,probs = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9))
+print(gini.deciles)#deciles#
+hist(gini,freq = F,col = "red")
+```
+#2
+
+```{r}
+m<-10000
+n<-100
+gini<-numeric(m)
+for(i in 1:m){
+  x<-runif(n) #uniform distribution#
+  xbar<-mean(x)
+  xs<-sort(x)
+  t<-0
+  for(j in 1:n){
+    t<-t+(2*j-n-1)*xs[j]/(n*n*xbar)
+  }
+  gini[i]<-t
+}
+gini.mean<-mean(gini)
+print(gini.mean)#mean#
+gini.median<-median(gini)
+print(gini.median)#median#
+gini.deciles<-quantile(gini,probs = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9))
+print(gini.deciles)#deciles#
+hist(gini,freq = F,col = "blue")
+```
+
+##Exercise 3 in P214
+Use sapply() and an anonymous function to extract the p-value from every trial
+```{r}
+set.seed(2)
+m<-500
+n<-100
+gini<-numeric(m)
+for(i in 1:m){
+  x<-rlnorm(n,meanlog=0,sdlog=1)
+  xbar<-mean(x)
+  xs<-sort(x)
+  t<-0
+  for(j in 1:n){
+    t<-t+(2*j-n-1)*xs[j]/(n*n*xbar)
+  }
+  gini[i]<-t
+}
+mu<-mean(gini)
+sigma<-sqrt(sd(gini)/m)
+cv<-qnorm(.975,0,1) #using Central limit theotem to construct the 95% confidence interval ,standard normal distribution #
+UCL1<-mu-cv*sigma
+UCL2<-mu+cv*sigma
+UCL1 #down confidence interval 
+UCL2 #up confidence interval #
+l<-2000 #sample from the generation to compute coverge rate#
+munew<-numeric(l)
+for(k in 1:l){
+  m<-100
+  n<-50
+  gini<-numeric(m)
+  for(i in 1:m){
+    x<-rlnorm(n,meanlog=0,sdlog=1)
+    xbar<-mean(x)
+    xs<-sort(x)
+    t<-0
+    for(j in 1:n){
+      t<-t+(2*j-n-1)*xs[j]/(n*n*xbar)
+    }
+  gini[i]<-t
+  }
+  munew[k]<-mean(gini)
+}
+sum((munew<UCL2)&(munew>UCL1))/l #coverage rate#
+```
+
+## Exercise 3 in P204
+Use both for loops and lapply() to fit liner models
+```{r,warning=FALSE,message=FALSE}
+attach(mtcars)
+formulas<-list(
+  mpg~disp,
+  mpg~I(1/disp),
+  mpg~disp+wt,
+  mpg~I(1/disp)+wt
+)
+
+#use lapply function
+out3_1<-lapply(formulas,lm)
+out3_1
+
+#use for loops
+out3_2<-vector("list",length(formulas))
+for(i in seq_along(formulas)){
+  out3_2[[i]]<-lm(formulas[[i]],data=mtcars)
+}
+out3_2
+detach(mtcars)
+```
+
+##Exercise 4 in P204
+fit the model mpg~disp to each of the bootstrap replicates
+```{r,warning=FALSE,message=FALSE}
+attach(mtcars)
+bootstraps<-lapply(1:10,function(i){
+  rows<-sample(1:nrow(mtcars),rep=TRUE)
+  mtcars[rows,]
+})
+
+#use lapply function
+out4_1<-lapply(seq_along(bootstraps),function(i){lm(mpg~disp,data = bootstraps[[i]])})
+out4_1
+#use for loops
+out4_2<-vector("list",length(bootstraps))
+for(i in seq_along(bootstraps)){
+  out4_2[[i]]<-lm(mpg~disp,data<-bootstraps[[i]])
+}
+out4_2
+detach(mtcars)
+```
+
+##Exercise 5 in P204
+extract Rsquare using the function below
+```{r}
+rsq<-function(mod) summary(mod)$r.squared
+#exercise 3 
+req3_1 <- lapply(out3_1, rsq)
+req3_2 <- lapply(out3_2, rsq)
+print(data.frame(unlist(req3_1),unlist(req3_2)))
+#exercise 4
+req4_1 <- lapply(out4_1, rsq)
+req4_2 <- lapply(out4_2, rsq)
+print(data.frame(unlist(req4_1),unlist(req4_2)))
+```
+
+##Exercise 3 in P214
+Use sapply() and an anonymous function to extract the p-value from every trial
+```{r}
+trials <- replicate(100,
+                    t.test(rpois(10, 10), rpois(7, 10)),
+                    simplify = FALSE)
+
+sapply(trials,function(mod){mod[["p.value"]]},simplify=TRUE)
+```
+
+##Exercise 6 in P214
+implement a combination of Map() and vapply()to create an lapply() variant
+```{r}
+# the example is make the data normalized (the value divide by the colmean)
+# use Map and vapply to solve 
+data <- matrix(rnorm(20, 0, 10), nrow = 4)
+x <- as.data.frame(data)
+answer1 <- Map("/",x,vapply(x,mean,c(1)))
+
+# use the lapply with an anonymous function to solve
+answer2 <- lapply(x,function(data){data/(mean(data))})
+print(data.frame(unlist(answer1),unlist(answer2)))
+```
+## Exercise 8.1
+Inplement the two-sample Cramer-von Mises test for equal distributions as a permutation test
+```{r}
+library("nortest")
+set.seed(1)
+attach(chickwts)
+x<-sort(as.vector(weight[feed=="soybean"]))
+y<-sort(as.vector(weight[feed=="linseed"]))
+detach(chickwts)
+z<-c(x,y)#pooled sample#
+R<-999#replicate number#
+K<-1:length(z)
+D<-numeric(R)
+CM<-function(x,y){#compute statistic of Cramer-von Mises
+  ecdfx<-ecdf(x)
+  ecdfy<-ecdf(y)
+  l_x<-length(x)
+  l_y<-length(y)
+  sum1<-sum((ecdfx(x)-ecdfy(x))^2)
+  sum2<-sum((ecdfx(y)-ecdfy(y))^2)
+  w<-l_x*l_y/(l_x+l_y)^2*(sum1+sum2)
+  return(w)
+}
+D0<-CM(x,y)
+for(i in 1:R){
+  k<-sample(K,size=length(x),replace=F)
+  x1<-z[k]
+  y1<-z[-k]
+  D[i]<-CM(x1,y1)
+}
+p<-mean(c(D0,D)>=D0)
+print(p)
+```
+
+## Exercise in class
+
+```{r}
+library(RANN)
+library(boot)
+library(energy)
+library(Ball)
+library(ggplot2)
+m<-30#time to loop
+k<-3
+p<-2
+n1<-n2<-50
+R<-999#bd.test replication number
+n<-n1+n2
+N=c(n1,n2)
+Tn<-function(z,ix,sizes,k){
+  n1<-sizes[1]
+  n2<-sizes[2]
+  n<-n1+n2
+  if(is.vector(z)) z<-data.frame(z,0)
+  z<-z[ix,]
+  NN<-nn2(data=z,k=k+1)
+  block1<-NN$nn.idx[1:n1,-1]
+  block2<-NN$nn.idx[(n1+1):n,-1]
+  i1<-sum(block1<n1+.5);i2<-sum(block2>n1+.5)
+  (i1+i2)/(k*n)
+}
+eqdist.nn<-function(z,sizes,k){
+  boot.obj<-boot(data=z,statistic = Tn,R=R,sim="permutation",sizes=sizes,k=k)
+  ts<-c(boot.obj$t0,boot.obj$t)
+  p.value<-mean(ts>=ts[1])
+  list(statistic=ts[1],p.value=p.value)
+}#NN
+p.values<-matrix(NA,m,3)
+for(i in 1:m){
+  x<-matrix(rnorm(n1*p,sd=1),ncol=p)#unequal variances
+  y<-matrix(rnorm(n2*p,sd=1.4),ncol=p)
+  z<-rbind(x,y)
+  p.values[i,1]<-eqdist.nn(z,N,k)$p.value#NN
+  p.values[i,2]<-eqdist.etest(z,size=N,R=R)$p.value#in the energy package
+  p.values[i,3]<-bd.test(x=x,y=y,R=999,seed=i)$p.value#BAll Divergence in the ball package
+}
+alpha<-0.1#confidence level
+pow<-apply(p.values<alpha,2,mean)#compute the number of p.values which is less than 0.1 in each column
+print(pow)
+```
+#Unequal variance and unequal expectations
+```{r}
+for(i in 1:m){
+  x<-matrix(rnorm(n1*p,mean=0.4,sd=1),ncol=p)#uniqual variances and unequal expectations
+  y<-matrix(rnorm(n2*p,mean=0,sd=1.4),ncol=p)
+  z<-rbind(x,y)
+  p.values[i,1]<-eqdist.nn(z,N,k)$p.value
+  p.values[i,2]<-eqdist.etest(z,size=N,R=R)$p.value
+  p.values[i,3]<-bd.test(x=x,y=y,R=999,seed=i)$p.value
+}
+alpha<-0.1
+pow<-apply(p.values<alpha,2,mean)
+print(pow)
+```
+#Non-normal distribution with 1 df and bimodel distribution
+```{r}
+for(i in 1:m){
+  x<-matrix(rt(n1*p,df=1),ncol=p)#t distribution
+  y<-matrix(rnorm(n2*p,sd=sample(c(1,1.3),size=n2*p,prob=c(0.5,0.5),replace=T)),ncol=p)#bimodel distuibution
+  z<-rbind(x,y)
+  p.values[i,1]<-eqdist.nn(z,N,k)$p.value
+  p.values[i,2]<-eqdist.etest(z,size=N,R=R)$p.value
+  p.values[i,3]<-bd.test(x=x,y=y,R=999,seed=i)$p.value
+}
+alpha<-0.01
+pow<-apply(p.values<alpha,2,mean)
+print(pow)
+```
+#Unbalanced samples
+```{r}
+n1<-50
+n2<-5
+n<-n1+n2
+N=c(n1,n2)
+for(i in 1:m){
+  x<-matrix(rnorm(n1*p,mean=1),ncol=p)#100 samples
+  y<-matrix(rnorm(n2*p,mean=2),ncol=p)#10 samples
+  z<-rbind(x,y)
+  p.values[i,1]<-eqdist.nn(z,N,k)$p.value
+  p.values[i,2]<-eqdist.etest(z,size=N,R=R)$p.value
+  p.values[i,3]<-bd.test(x=x,y=y,R=999,seed=i)$p.value
+}
+alpha<-0.1
+pow<-apply(p.values<alpha,2,mean)
+print(pow)
+```
+
+##Exercise 9.3 
+Use the Metropolis-Hastings sampler to generate random variables from a standard cauchy distribution
+```{r}
+library(tidyverse)
+set.seed(1)
+m<-20000#samples number
+x<-numeric(m)#to store the samples
+x[1]<-runif(1)#the first sample
+u<-runif(m)
+standard_Cauchy<-function(x){
+  return(1/(pi*(1+x^2)))
+}
+for(i in 1:m){
+  proposal<-x[i]+runif(1,min = -1,max = 1)
+  accept<-runif(1)<standard_Cauchy(proposal)/standard_Cauchy(x[i])
+  x[i+1]<-ifelse(accept==T,proposal,x[i])
+}
+x<-x[1001:m]
+index<-1001:m
+quantile(x,probs = seq(0.1,0.9,0.1))
+qcauchy(seq(0.1,0.9,0.1),loc=0,scale=1)
+```
+
+##Exercise9.6
+Estimate the posterior distribution of theta given the observed sample
+```{r}
+set.seed(1)
+m<-5000#lengths of the chain
+w<-0.25#width of the uniform support set
+u<-runif(m)#for accept/reject step
+v<-runif(m,-w,w)#proposal distribution
+group<-c(125,18,20,34)
+x<-numeric(m)#the chain
+prob<-function(theta,group){
+  if(theta<0||theta>=0.8)
+    return(0)
+  return((1/2+theta/4)^group[1]*((1-theta)/4)^group[2]*((1-theta)/4)^group[3]*(theta/4)^group[4])
+}
+x[1]<-0.4#initialize form 0.4
+for(i in 2:m){
+  theta<-x[i-1]+v[i]
+  if(u[i]<=prob(theta,group)/prob(x[i-1],group))
+    x[i]<-theta
+  else
+    x[i]<-x[i-1]
+}
+index<-1001:m#discard the first thousand sample
+theta_hat<-mean(x[index])
+print(theta_hat)
+```
+##Exercise 9.6
+Estimate the posterior distribution of theta given the observed sample.
+```{r}
+set.seed(12345)
+group<-c(125,18,20,34)
+k<-4#number if chains to generate 
+N<-5000#length of the chain
+b<-500#burn-in length
+Gelman.Robin<-function(psi){
+  psi<-as.matrix(psi)
+  n<-ncol(psi)
+  k<-nrow(psi)
+  psi.means<-rowMeans(psi)#row means
+  B<-n*var(psi.means)#between variance est.
+  psi.w<-apply(psi,1,"var")#within variances
+  W<-mean(psi.w)#within est.
+  v.hat<-W*(n-1)/n+(B/n)#uppervariance est.
+  r.hat<-v.hat/W#G_R statistic
+  return(r.hat)
+}
+prob<-function(theta,group){
+  if(theta<0||theta>=0.9)
+    return(0)
+  return((1/2+theta/4)^group[1]*((1-theta)/4)^group[2]*((1-theta)/4)^group[3]*(theta/4)^group[4])
+}
+Chain<-function(group,N,X1){
+  x<-numeric(N)
+  x[1]<-X1#initialize x[1]
+  w<-0.25
+  u<-runif(N)
+  v<-runif(N,-w,w)
+  for(i in 2:N){
+    theta<-x[i-1]+v[i]
+    if(u[i]<=prob(theta,group)/prob(x[i-1],group))
+      x[i]<-theta
+    else
+      x[i]<-x[i-1]
+  }
+  return(x)
+}
+#generate the chains
+x0<-c(0.2,0.4,0.6,0.8)
+X<-matrix(0,nrow=k,ncol=N)
+for(i in 1:k) X[i,]<-Chain(group,N,x0[i])
+#compute diagnostic statistics
+psi<-t(apply(X,1,cumsum))
+for(i in 1:nrow(psi)) psi[i,]<-psi[i,]/(1:ncol(psi))
+print(Gelman.Robin(psi))
+#plot pso for the four chains
+par(mfrow=c(2,2))
+par(mfrow=c(1,1))#restore default
+#plot the sequence of R-hat statistics
+rhat<-rep(0,N)
+```
+
+##Exercise 11.4
+Find the intersection points A(k) in (0,sqrt(k)) of the two curves for k=4:25,100,500,1000
+```{r}
+set.seed(12345)
+eps<-.Machine$double.eps^0.25#criterion to judge whether function is near to 0
+k<-c(4:25,100,500,1000)#k mentioned in the question
+S<-function(k,a){
+  return((1-pt(sqrt((a^2*k)/(k+1-a^2)),df=k))-(1-pt(sqrt((a^2*(k-1))/(k-a^2)),df=k-1)))
+}#S_k(a)-S_{k-1}(a)
+Root<-function(k1){
+  a<-seq(0.1,sqrt(k1)-0.1,length=3)
+  y<-c(S(k1,a[1]),S(k1,a[2]),S(k1,a[3]))
+  while(abs(y[2])>eps){
+    if(y[1]*y[2]<0){
+      a[3]<-a[2]
+      y[3]<-y[2]
+    }
+    else{
+      a[1]<-a[2]
+      y[1]<-y[2]
+    }
+    a[2]<-(a[1]+a[3])/2
+    y[2]<-S(k1,a[2])
+  }
+  result<-list(k1,a[2],y[2])
+  return(result)
+}
+for(i in k){#print the out put of each k
+  cat('k:',Root(i)[[1]],'root:',Root(i)[[2]],'value of function:',Root(i)[[3]],'\n')
+}
+```
+
+
+## Exercise 11.6
+compute the cdf of cauchy distribution
+```{r}
+theta1<-1;ita1<-0#standard cauchy ditribution
+f<-function(x,theta,ita){
+  (theta*pi*(1+((x-ita)/theta)^2))^(-1)
+}
+k<-seq(-30,30,2)
+F1<-rep(0,length(k))
+for(i in 1:length(k)){
+  up<-k[i]
+  F1[i]<-integrate(f,lower=-Inf,upper=up,rel.tol = .Machine$double.eps^0.25,theta<-theta1,ita<-ita1)$value
+}#integrate function
+F2<-pcauchy(k)
+F1
+F2
+```
+
+## Question
+Let the three alleles be A, B, and O
+
+Genotype|AA| BB | OO | AO  | BO | AB | SUM |
+------|------|------|------|------|------|------|
+Frequency|P2 | Q2 | r2 | 2pr | 2qr| 2pq| 1   |
+Count    |nAA | nBB|nOO | nAO | nBO| nAB| n   |
+
+Observed data: nA. = nAA + nAO = 28 (A-type),
+nB. = nBB + nBO = 24 (B-type), nOO = 41 (O-type), nAB = 70 (AB-type).
+
+Use EM algorithm to solve MLE of p and q (consider missing data nAA and nBB).
+
+Record the maximum likelihood values in M-steps, are they increasing?
+
+```{r}
+N=1000
+na=28
+nb=24
+noo=41
+nab=70
+p=0.6   #initial est. for p
+q=0.3
+r=0.1
+pm=numeric(0)
+qm=numeric(0)
+rm=numeric(0)
+lofm=numeric(0)
+lof=function(p,q,r){   #log maximum likelihood values
+  return(log(choose(n,naa)*choose(n-naa,nbb)*choose(n-naa-nbb,noo)*choose(nao+nbo+nab,nao)*choose(nbo+nab,nbo))+(nao+nbo+nab)*log(2)+(2*naa+nao+nab)*log(p)+(2*nbb+nbo+nab)*log(q)+(2*noo+nao+nbo)*log(r))
+}
+for (j in 1:N) {
+  naa=round(na*p^2/(p^2+2*p*r))
+  nbb=round(nb*q^2/(q^2+2*q*r))
+  nao=na-naa
+  nbo=nb-nbb
+  n=naa+nbb+noo+nao+nbo+nab
+  if(abs(p-(2*naa+nao+nab)/2/n)<0.000000001&&abs(q-(2*nbb+nbo+nab)/2/n)<0.000000001&&abs(r-(2*noo+nbo+nao)/2/n)<0.000000001&&j>5) break
+  p=(2*naa+nao+nab)/2/n  #update estimation
+  q=(2*nbb+nbo+nab)/2/n
+  r=(2*noo+nbo+nao)/2/n
+  pm=c(pm,p)
+  qm=c(qm,q)
+  rm=c(rm,r)
+  lofm=c(lofm,lof(p,q,r))
+}
+c(p,q,r)
+exp(lofm)
+```
+They are increasing
+## Exercise 3 in P204
+Use both for loops and lapply() to fit liner models
+```{r,warning=FALSE,message=FALSE}
+attach(mtcars)
+formulas<-list(
+  mpg~disp,
+  mpg~I(1/disp),
+  mpg~disp+wt,
+  mpg~I(1/disp)+wt
+)
+
+#use lapply function
+out3_1<-lapply(formulas,lm)
+out3_1
+
+#use for loops
+out3_2<-vector("list",length(formulas))
+for(i in seq_along(formulas)){
+  out3_2[[i]]<-lm(formulas[[i]],data=mtcars)
+}
+out3_2
+detach(mtcars)
+```
+
+##Exercise 4 in P204
+fit the model mpg~disp to each of the bootstrap replicates
+```{r,warning=FALSE,message=FALSE}
+attach(mtcars)
+bootstraps<-lapply(1:10,function(i){
+  rows<-sample(1:nrow(mtcars),rep=TRUE)
+  mtcars[rows,]
+})
+
+#use lapply function
+out4_1<-lapply(seq_along(bootstraps),function(i){lm(mpg~disp,data = bootstraps[[i]])})
+out4_1
+#use for loops
+out4_2<-vector("list",length(bootstraps))
+for(i in seq_along(bootstraps)){
+  out4_2[[i]]<-lm(mpg~disp,data<-bootstraps[[i]])
+}
+out4_2
+detach(mtcars)
+```
+
+##Exercise 5 in P204
+extract Rsquare using the function below
+```{r}
+rsq<-function(mod) summary(mod)$r.squared
+#exercise 3 
+req3_1 <- lapply(out3_1, rsq)
+req3_2 <- lapply(out3_2, rsq)
+print(data.frame(unlist(req3_1),unlist(req3_2)))
+#exercise 4
+req4_1 <- lapply(out4_1, rsq)
+req4_2 <- lapply(out4_2, rsq)
+print(data.frame(unlist(req4_1),unlist(req4_2)))
+```
+
+##Exercise 3 in P214
+Use sapply() and an anonymous function to extract the p-value from every trial
+```{r}
+trials <- replicate(100,
+                    t.test(rpois(10, 10), rpois(7, 10)),
+                    simplify = FALSE)
+
+sapply(trials,function(mod){mod[["p.value"]]},simplify=TRUE)
+```
+
+##Exercise 6 in P214
+implement a combination of Map() and vapply()to create an lapply() variant
+```{r}
+# the example is make the data normalized (the value divide by the colmean)
+# use Map and vapply to solve 
+data <- matrix(rnorm(20, 0, 10), nrow = 4)
+x <- as.data.frame(data)
+answer1 <- Map("/",x,vapply(x,mean,c(1)))
+
+# use the lapply with an anonymous function to solve
+answer2 <- lapply(x,function(data){data/(mean(data))})
+print(data.frame(unlist(answer1),unlist(answer2)))
+```
+## Exercise 4 in P365
+Make a faster version of chisq.test() that only computes the chi-square test
+statistic when the input is two numeric vectors with no missing values. 
+```{r}
+expected <- function(colsum, rowsum, total) {
+  (colsum / total) * (rowsum / total) * total
+}
+chisq.stat <- function(observed, expected) {
+  ((observed - expected) ^ 2) / expected
+}#compute the pearson's chisquare test statistic
+```
+
+
+
+##Exercise 5 in P365
+ Can you make a faster version of table() for the case of an input of two integer vectors with no missing values?
+```{r}
+library(microbenchmark)
+table2 <- function(x, y) {
+  x_val <- unique(x)
+  y_val <- unique(y)
+  mat <- matrix(0L, length(x_val), length(y_val))
+  for (i in seq_along(x)) {
+    mat[which(x_val == x[[i]]), which(y_val == y[[i]])] <-
+      mat[which(x_val == x[[i]]),  which(y_val == y[[i]])] + 1L
+  }
+  dimnames <- list(x_val, y_val)
+  names(dimnames) <- as.character(as.list(match.call())[-1])  # R has names for dimnames... :/
+  tab <- array(mat, dim = dim(mat), dimnames = dimnames)
+  class(tab) <- "table"
+  tab
+}
+a <- c(2,3,4)#an example
+identical(table(a, a), table2(a, a))
+microbenchmark::microbenchmark(table(a, a), table2(a, a))
+```
