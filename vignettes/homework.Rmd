@@ -1,5 +1,5 @@
 ---
-title: "18048homework"
+title: "18048introduction and homework"
 author: '18048'
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -8,6 +8,59 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+## Overview
+
+__StatComp18048__ is a simple R package developed to finish the final work of the class of Statistic Computing. Three functions are considered, namely, _Rray_ (generate random numbers using a rayleigh-distribution sampler) and _rbetA_ (generate random numbers using a beta-distribution sampler) and  _table2_(construct a list to statistic the frequency. 
+
+The source R code for _RraY_ is as follows:
+```{r,eval=FALSE}
+function(m,sigma){
+  x<-numeric(m)
+  u<-runif(m/2)#use inverse transformation method to generate
+  v<-1-u #antithetic variables#
+  u<-c(u,v)
+  x<-sqrt(-2*(sigma^2)*log(1-u))#intagrate the Rayleigh density function to get the cdf#
+  return(x) 
+}
+```
+
+The source R code for _rbetA_ is as follows:
+
+```{r,eval=FALSE}
+function(n,a,b){
+   j<-k<-0
+   y<-numeric(n)
+   while(k<n){
+     u<-runif(1)
+     j<-j+1
+     x<-runif(1)
+     if(x^(a-1)*(1-x)^(b-1)>u){
+       k<-k+1
+       y[k]<-x
+     }
+   }
+   return(y)
+}
+```
+
+The source R code for _table2_ is as follows: 
+
+```{r,eval=FALSE}
+function(x, y) {
+  x_val <- unique(x)
+  y_val <- unique(y)
+  mat <- matrix(0L, length(x_val), length(y_val))
+  for (i in seq_along(x)) {
+    mat[which(x_val == x[[i]]), which(y_val == y[[i]])] <-
+      mat[which(x_val == x[[i]]),  which(y_val == y[[i]])] + 1L
+  }
+  dimnames <- list(x_val, y_val)
+  names(dimnames) <- as.character(as.list(match.call())[-1])  # R has names for dimnames... :/
+  tab <- array(mat, dim = dim(mat), dimnames = dimnames)
+  class(tab) <- "table"
+  tab
+}
+```
 ## Example No.1 from Page32
 ```{r}
 x<-1:4
