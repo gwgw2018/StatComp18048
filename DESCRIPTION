@@ -7,7 +7,7 @@ Author: Wei Gai
 Maintainer: Wei Gai <gw2012@mail.ustc.edu.cn>
 Description: Several R and Rcpp function are included in this package for illustration. 
 License: GPL (>= 2)
-Imports: knitr, rmarkdown
+Imports: knitr,rmarkdown,boot,Ball,ggplot2
 RoxygenNote: 6.1.1
 URL: http://github.com/gwgw2018/StatComp18048
 BugReports: http://github.com/gwgw2018/StatComp18048/issues
